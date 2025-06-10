@@ -1,0 +1,111 @@
+Database Schema: employeedb
+================================================================================
+
+Table: auth_group
+-----------------
+- id: A field of type int (required).
+- name: A field of type varchar(150) (required).
+
+Table: auth_group_permissions
+-----------------------------
+- id: A field of type int (required).
+- group_id: A field of type int (required). Refers to auth_group.id.
+- permission_id: A field of type int (required). Refers to auth_permission.id.
+
+Table: auth_permission
+----------------------
+- id: A field of type int (required).
+- name: A field of type varchar(255) (required).
+- content_type_id: A field of type int (required). Refers to django_content_type.id.
+- codename: A field of type varchar(100) (required).
+
+Table: auth_user
+----------------
+- id: A field of type int (required).
+- password: A field of type varchar(128) (required).
+- last_login: A field of type datetime(6) (optional).
+- is_superuser: A field of type tinyint(1) (required).
+- username: A field of type varchar(150) (required).
+- first_name: A field of type varchar(150) (required).
+- last_name: A field of type varchar(150) (required).
+- email: A field of type varchar(254) (required).
+- is_staff: A field of type tinyint(1) (required).
+- is_active: A field of type tinyint(1) (required).
+- date_joined: A field of type datetime(6) (required).
+
+Table: auth_user_groups
+-----------------------
+- id: A field of type int (required).
+- user_id: A field of type int (required). Refers to auth_user.id.
+- group_id: A field of type int (required). Refers to auth_group.id.
+
+Table: auth_user_user_permissions
+---------------------------------
+- id: A field of type int (required).
+- user_id: A field of type int (required). Refers to auth_user.id.
+- permission_id: A field of type int (required). Refers to auth_permission.id.
+
+Table: departments
+------------------
+- DepartmentID: A field of type int (required).
+- DepartmentName: A field of type varchar(50) (required).
+
+Table: django_admin_log
+-----------------------
+- id: A field of type int (required).
+- action_time: A field of type datetime(6) (required).
+- object_id: A field of type longtext (optional).
+- object_repr: A field of type varchar(200) (required).
+- action_flag: A field of type smallint unsigned (required).
+- change_message: A field of type longtext (required).
+- content_type_id: A field of type int (optional). Refers to django_content_type.id.
+- user_id: A field of type int (required). Refers to auth_user.id.
+
+Table: django_content_type
+--------------------------
+- id: A field of type int (required).
+- app_label: A field of type varchar(100) (required).
+- model: A field of type varchar(100) (required).
+
+Table: django_migrations
+------------------------
+- id: A field of type int (required).
+- app: A field of type varchar(255) (required).
+- name: A field of type varchar(255) (required).
+- applied: A field of type datetime(6) (required).
+
+Table: django_session
+---------------------
+- session_key: A field of type varchar(40) (required).
+- session_data: A field of type longtext (required).
+- expire_date: A field of type datetime(6) (required).
+
+Table: employeeprojects
+-----------------------
+- ID: A field of type int (required).
+- EmployeeID: A field of type int (optional). Refers to employees.EmployeeID.
+- ProjectID: A field of type int (optional). Refers to projects.ProjectID.
+- AssignedDate: A field of type date (optional).
+
+Table: employees
+----------------
+- EmployeeID: A field of type int (required).
+- FirstName: A field of type varchar(50) (optional).
+- LastName: A field of type varchar(50) (optional).
+- DepartmentID: A field of type int (optional). Refers to departments.DepartmentID.
+- JobTitleID: A field of type int (optional). Refers to jobtitles.JobTitleID.
+- HireDate: A field of type date (optional).
+
+Table: jobtitles
+----------------
+- JobTitleID: A field of type int (required).
+- TitleName: A field of type varchar(50) (required).
+
+Table: projects
+---------------
+- ProjectID: A field of type int (required).
+- ProjectName: A field of type varchar(100) (optional).
+- DepartmentID: A field of type int (optional). Refers to departments.DepartmentID.
+- StartDate: A field of type date (optional).
+- EndDate: A field of type date (optional).
+
