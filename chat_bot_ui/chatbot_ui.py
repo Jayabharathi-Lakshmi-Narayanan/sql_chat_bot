@@ -1,16 +1,15 @@
 import streamlit as st
 import requests
+import json
 
-BACKEND_URL = "http://127.0.0.1:8000/chat/"  # Django backend endpoint
+BACKEND_URL = "http://127.0.0.1:8000/chat/"
 
 st.set_page_config(page_title="SQL Chatbot", layout="centered")
 st.title("SQL Chatbot")
 
-# Initialize chat history
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# Chat form for input
 with st.form("chat_form"):
     user_question = st.text_input("Your Question:")
     submitted = st.form_submit_button("Send")
@@ -21,9 +20,15 @@ with st.form("chat_form"):
             "chat_history": st.session_state.chat_history,
         }
 
+        headers = {"Content-Type": "application/json"}
+
+        # Show exact JSON being sent
+        st.write("📤 Sending payload:")
+        st.code(json.dumps(payload, indent=2), language="json")
+
         with st.spinner("Thinking..."):
             try:
-                response = requests.post(BACKEND_URL, json=payload)
+                response = requests.post(BACKEND_URL, json=payload, headers=headers)
                 response.raise_for_status()
                 data = response.json()
 
@@ -35,8 +40,11 @@ with st.form("chat_form"):
                         "raw_results": data.get("raw_results", "No results."),
                     }
                 )
-            except Exception as e:
+
+            except requests.exceptions.RequestException as e:
                 st.error(f"❌ Error communicating with backend: {e}")
+            except ValueError:
+                st.error("❌ Invalid response received from backend.")
 
 # Display chat history
 st.divider()

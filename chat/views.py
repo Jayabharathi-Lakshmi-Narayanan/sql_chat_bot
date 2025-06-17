@@ -1,36 +1,45 @@
+# views.py
+import os
 import json
 import logging
-import os
 from urllib.parse import quote_plus
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
 
 from .sql_agent import (
-    get_sql_agent,
+    dynamic_get_sql_response,
     get_explanation_llm,
     run_sql_query,
-    trim_chat_history,
+    parse_schema_to_dict,
+    validate_sql_against_schema,
     load_or_generate_metadata,
 )
 
+# Setup logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
-# Load DB config
+# Load environment variables
+load_dotenv(dotenv_path="D:/jb/chat_with_mysql/config/.env")
+
+# DB config
 DB_USER = os.getenv("DB_USER", "root")
-DB_PASS = os.getenv("DB_PASSWORD", "Yakkay@123")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "Yakkay@123")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME", "employeedb")
 
-encoded_password = quote_plus(DB_PASS)
+# Build DB URI
+encoded_password = quote_plus(DB_PASSWORD)
 db_uri = f"mysql+pymysql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 db = SQLDatabase.from_uri(db_uri)
 
-# Load metadata and initialize chains
+# Preload schema and explanation chain
 rich_schema = load_or_generate_metadata()
-agent = get_sql_agent(rich_schema)
+schema_dict = parse_schema_to_dict(rich_schema)
 explanation_chain = get_explanation_llm()
 
 
@@ -38,11 +47,9 @@ def format_raw_results(raw_results):
     if not raw_results:
         return "No results found."
     if isinstance(raw_results, list):
-        if len(raw_results) > 0 and isinstance(raw_results[0], tuple):
-            return [
-                {"value": row[0]} if len(row) == 1 else list(row) for row in raw_results
-            ]
-        return raw_results
+        return [
+            {"value": row[0]} if len(row) == 1 else list(row) for row in raw_results
+        ]
     return str(raw_results)
 
 
@@ -64,46 +71,40 @@ def chat_view(request):
         if not user_question:
             return JsonResponse({"error": "Empty question"}, status=400)
 
-        chat_history_str = trim_chat_history(chat_history, max_tokens=256)
-        prompt_length = len(rich_schema) + len(chat_history_str) + len(user_question)
-        logger.info(f"Prompt size: {prompt_length}")
+        logger.info("User question received")
+        response = dynamic_get_sql_response(user_question, chat_history)
+        sql_query = (
+            response["text"].strip()
+            if isinstance(response, dict)
+            else str(response).strip()
+        )
 
-        try:
-            response = agent.invoke(
+        logger.debug("Generated SQL query")
+        validation_errors = validate_sql_against_schema(sql_query, schema_dict)
+
+        if validation_errors:
+            return JsonResponse(
                 {
-                    "schema": rich_schema,
-                    "chat_history": chat_history_str,
                     "question": user_question,
+                    "sql": sql_query,
+                    "raw_results": [],
+                    "answer": "SQL validation failed. Here is the generated SQL.",
+                    "details": validation_errors,
                 }
             )
 
-            sql_query = (
-                response["text"].strip()
-                if isinstance(response, dict) and "text" in response
-                else str(response).strip()
-            )
-
-            raw_results = run_sql_query(db, sql_query)
-
-        except Exception as e:
-            logger.exception(f"Error generating or running SQL: {e}")
-            return JsonResponse(
-                {"error": "Failed to process your question."}, status=500
-            )
-
+        raw_results = run_sql_query(db, sql_query)
         formatted_results = format_raw_results(raw_results)
 
         try:
             explanation_text = explanation_chain.invoke(
                 {
                     "question": user_question,
-                    "raw_results": json.dumps(formatted_results, indent=2)
-                    if isinstance(formatted_results, (dict, list))
-                    else formatted_results,
+                    "raw_results": json.dumps(formatted_results, indent=2),
                 }
             )
         except Exception as e:
-            logger.warning(f"Failed to generate explanation: {e}")
+            logger.warning(f"Explanation LLM failed: {e}")
             explanation_text = "Explanation not available."
 
         return JsonResponse(
@@ -111,13 +112,11 @@ def chat_view(request):
                 "question": user_question,
                 "sql": sql_query,
                 "raw_results": formatted_results,
-                "answer": explanation_text,
+                "answer": explanation_text.get("text", "Explanation not available.")
+                if isinstance(explanation_text, dict)
+                else explanation_text or "Explanation not available.",
             }
         )
-
-    except json.JSONDecodeError:
-        logger.warning("Invalid JSON received")
-        return JsonResponse({"error": "Invalid JSON format"}, status=400)
 
     except Exception:
         logger.exception("Unexpected error in chat_view:")

@@ -1,27 +1,50 @@
-Database Schema: employeedb
+Database Schema: dares
 ================================================================================
+
+Table: address
+--------------
+- address_id: A field of type int (required). Primary Key.
+- address_type_code: A field of type varchar(255) (optional).
+- address_1: A field of type varchar(255) (optional).
+- address_2: A field of type varchar(255) (optional).
+- phone_no: A field of type varchar(45) (optional).
+- website: A field of type varchar(45) (optional).
+- email_1: A field of type varchar(45) (optional).
+- email_2: A field of type varchar(45) (optional).
+- city: A field of type varchar(45) (optional).
+- state: A field of type varchar(45) (optional).
+- country: A field of type varchar(45) (optional).
+- zip: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+- state_id: A field of type int (optional).
+- city_id: A field of type int (optional).
+- country_id: A field of type int (optional).
 
 Table: auth_group
 -----------------
-- id: A field of type int (required).
+- id: A field of type int (required). Primary Key.
 - name: A field of type varchar(150) (required).
 
 Table: auth_group_permissions
 -----------------------------
-- id: A field of type int (required).
-- group_id: A field of type int (required). Refers to auth_group.id.
-- permission_id: A field of type int (required). Refers to auth_permission.id.
+- id: A field of type int (required). Primary Key.
+- group_id: A field of type int (required). Foreign Key → auth_group.id.
+- permission_id: A field of type int (required). Foreign Key → auth_permission.id.
 
 Table: auth_permission
 ----------------------
-- id: A field of type int (required).
+- id: A field of type int (required). Primary Key.
 - name: A field of type varchar(255) (required).
-- content_type_id: A field of type int (required). Refers to django_content_type.id.
+- content_type_id: A field of type int (required). Foreign Key → django_content_type.id.
 - codename: A field of type varchar(100) (required).
 
 Table: auth_user
 ----------------
-- id: A field of type int (required).
+- id: A field of type int (required). Primary Key.
 - password: A field of type varchar(128) (required).
 - last_login: A field of type datetime(6) (optional).
 - is_superuser: A field of type tinyint(1) (required).
@@ -35,77 +58,966 @@ Table: auth_user
 
 Table: auth_user_groups
 -----------------------
-- id: A field of type int (required).
-- user_id: A field of type int (required). Refers to auth_user.id.
-- group_id: A field of type int (required). Refers to auth_group.id.
+- id: A field of type int (required). Primary Key.
+- user_id: A field of type int (required). Foreign Key → auth_user.id.
+- group_id: A field of type int (required). Foreign Key → auth_group.id.
 
 Table: auth_user_user_permissions
 ---------------------------------
-- id: A field of type int (required).
-- user_id: A field of type int (required). Refers to auth_user.id.
-- permission_id: A field of type int (required). Refers to auth_permission.id.
+- id: A field of type int (required). Primary Key.
+- user_id: A field of type int (required). Foreign Key → auth_user.id.
+- permission_id: A field of type int (required). Foreign Key → auth_permission.id.
 
-Table: departments
+Table: batch
+------------
+- batch_id: A field of type int (required). Primary Key.
+- batch_type_id: A field of type int (optional). Foreign Key → batch_type.batch_type_id.
+- batch_status_id: A field of type int (optional).
+- provider_id: A field of type int (optional). Foreign Key → provider.provider_id.
+- payor_id: A field of type int (optional). Foreign Key → payor.payor_id.
+- name: A field of type varchar(255) (optional).
+- description: A field of type varchar(255) (optional).
+- due_date: A field of type date (optional).
+- claim_count: A field of type int (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- updated_date: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: batch_claim
 ------------------
-- DepartmentID: A field of type int (required).
-- DepartmentName: A field of type varchar(50) (required).
+- batch_claim_id: A field of type int (required). Primary Key.
+- batch_id: A field of type int (optional). Foreign Key → batch.batch_id.
+- claim_id: A field of type int (optional). Foreign Key → claim.claim_id.
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- updated_date: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: batch_detail
+-------------------
+- batch_detail_id: A field of type int (required). Primary Key.
+- batch_id: A field of type int (required).
+- batch_owner_id: A field of type int (optional). Foreign Key → users.user_id.
+- nsb_contact_id: A field of type int (optional).
+- dispute_nbr: A field of type varchar(50) (optional).
+- idr_entity_id: A field of type int (optional). Foreign Key → idr_entity.idr_entity_id.
+- provider_address_id: A field of type int (optional). Foreign Key → provider_address.provider_address_id.
+- provider_facility_id: A field of type int (optional). Foreign Key → provider_facility.provider_facility_id.
+- on_start_date: A field of type date (optional).
+- initiation_start_date: A field of type date (optional).
+- initiation_end_date: A field of type date (optional).
+- hcpc_code: A field of type varchar(45) (optional).
+- client_type_code: A field of type varchar(10) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+- dos_start_date: A field of type datetime (optional).
+- dos_end_date: A field of type datetime (optional).
+- service_type_code: A field of type varchar(10) (optional).
+- service_code: A field of type varchar(45) (optional).
+- plan_type_code: A field of type varchar(10) (optional).
+- payor_plan_name: A field of type varchar(255) (optional).
+- erisa_ind: A field of type tinyint(1) (optional).
+- fehb_code: A field of type varchar(45) (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
+
+Table: batch_document
+---------------------
+- batch_document_id: A field of type int (required). Primary Key.
+- document_id: A field of type int (optional). Foreign Key → document.document_id.
+- document_list_id: A field of type int (optional). Foreign Key → document_list.document_list_id.
+- batch_id: A field of type int (optional). Foreign Key → batch.batch_id.
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+
+Table: batch_error_log
+----------------------
+- batch_error_log_id: A field of type int (required). Primary Key.
+- batch_id: A field of type int (required). Foreign Key → batch.batch_id.
+- error_log_id: A field of type int (optional).
+- error_code: A field of type varchar(50) (optional).
+- error_description: A field of type varchar(500) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+
+Table: batch_query
+------------------
+- batch_query_id: A field of type int (required). Primary Key.
+- batch_id: A field of type int (required).
+- query_id: A field of type int (required).
+- operator_code: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: batch_status
+-------------------
+- batch_status_id: A field of type int (required). Primary Key.
+- batch_id: A field of type int (optional). Foreign Key → batch.batch_id.
+- status_id: A field of type int (optional). Foreign Key → status.status_id.
+- workflow_id: A field of type int (optional). Foreign Key → workflow.workflow_id.
+- workflow_step_id: A field of type int (optional). Foreign Key → workflow_step.workflow_step_id.
+- start_date: A field of type datetime (optional).
+- end_date: A field of type datetime (optional).
+- actual_date: A field of type datetime (optional).
+- reason_code: A field of type varchar(10) (optional).
+- reason_text: A field of type varchar(500) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(45) (optional).
+- updated_by: A field of type varchar(45) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: batch_type
+-----------------
+- batch_type_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (optional).
+- description: A field of type varchar(255) (optional).
+- limit: A field of type int (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: charge
+-------------
+- charge_id: A field of type int (required). Primary Key.
+- claim_id: A field of type int (required). Foreign Key → claim.claim_id.
+- mandatory_ind: A field of type tinyint(1) (optional).
+- cpt_code: A field of type varchar(255) (optional).
+- cpt_description: A field of type varchar(255) (optional).
+- QPA_percentage: A field of type varchar(255) (optional).
+- QPA_amt: A field of type decimal(10,2) (optional).
+- priinspmt: A field of type decimal(10,2) (optional).
+- BilledAmount: A field of type decimal(10,2) (optional).
+- total_cost_share_amt: A field of type decimal(10,2) (optional).
+- Diagnosis_Code: A field of type varchar(255) (optional).
+- Diagnosis_Description: A field of type varchar(255) (optional).
+- initial_payment_amt: A field of type decimal(10,2) (optional).
+- initial_payment_date: A field of type date (optional).
+- offer_amt: A field of type decimal(10,2) (optional).
+- service_date: A field of type datetime (optional).
+- ClientSystemChargeID: A field of type varchar(255) (optional).
+- CoInsurance: A field of type decimal(10,2) (optional).
+- CoPayment: A field of type decimal(10,2) (optional).
+- Deductible: A field of type decimal(10,2) (optional).
+- Incremental_Value: A field of type decimal(10,2) (optional).
+- IncrementalImpact: A field of type decimal(10,2) (optional).
+- ContractualWriteOff: A field of type varchar(255) (optional).
+- RemitDate: A field of type varchar(255) (optional).
+- RemitDate2: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: cities
+-------------
+- cities_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (optional).
+- state_id: A field of type int (optional).
+- state_code: A field of type varchar(255) (optional).
+- country_id: A field of type int (optional).
+- country_code: A field of type varchar(255) (optional).
+- latitude: A field of type float (optional).
+- longitude: A field of type float (optional).
+- flag: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: claim
+------------
+- claim_id: A field of type int (required). Primary Key.
+- claim_no: A field of type varchar(255) (required).
+- company_id: A field of type int (optional).
+- claim_status_id: A field of type int (optional).
+- icd_code_id: A field of type int (optional).
+- payor_id: A field of type int (optional).
+- provider_id: A field of type int (optional).
+- contact_id: A field of type int (optional).
+- ClientSystemVisitID: A field of type varchar(255) (optional).
+- ClientSystemClaimNumber: A field of type varchar(255) (optional).
+- description: A field of type varchar(255) (optional).
+- claim_date: A field of type date (optional).
+- patient_name: A field of type varchar(255) (optional).
+- patient_number: A field of type varchar(255) (optional).
+- origin_location: A field of type varchar(255) (optional).
+- destination_location: A field of type varchar(255) (optional).
+- client_ref_number: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: claim_document
+---------------------
+- claim_document_id: A field of type int (required). Primary Key.
+- document_id: A field of type int (optional). Foreign Key → document.document_id.
+- document_list_id: A field of type int (optional). Foreign Key → document_list.document_list_id.
+- claim_id: A field of type int (optional). Foreign Key → claim.claim_id.
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
+
+Table: claim_error_log
+----------------------
+- claim_error_log_id: A field of type int (required). Primary Key.
+- claim_id: A field of type int (required). Foreign Key → claim.claim_id.
+- error_log_id: A field of type int (optional). Foreign Key → error_log.error_log_id.
+- error_code: A field of type varchar(15) (optional).
+- error_description: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+
+Table: claim_log
+----------------
+- claim_log_id: A field of type int (required). Primary Key.
+- file_upload_log_id: A field of type int (optional). Foreign Key → file_upload_log.file_upload_log_id.
+- claim_id: A field of type int (optional). Foreign Key → claim.claim_id.
+- created_by: A field of type int (optional).
+- created_date: A field of type datetime (optional).
+
+Table: claim_status
+-------------------
+- claim_status_id: A field of type int (required). Primary Key.
+- claim_id: A field of type int (optional). Foreign Key → claim.claim_id.
+- status_id: A field of type int (optional). Foreign Key → status.status_id.
+- workflow_id: A field of type int (optional). Foreign Key → workflow.workflow_id.
+- workflow_step_id: A field of type int (optional). Foreign Key → workflow_step.workflow_step_id.
+- start_date: A field of type datetime (optional).
+- end_date: A field of type datetime (optional).
+- actual_date: A field of type datetime (optional).
+- reason_code: A field of type varchar(10) (optional).
+- reason_text: A field of type varchar(500) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(45) (optional).
+- updated_by: A field of type varchar(45) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: claimant_type
+--------------------
+- claimant_type_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (required).
+- description: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: comment
+--------------
+- comment_id: A field of type int (required). Primary Key.
+- comment_text: A field of type varchar(500) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_by: A field of type int (optional).
+- created_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+
+Table: company
+--------------
+- company_id: A field of type int (required). Primary Key.
+- company_name: A field of type varchar(255) (required).
+- short_description: A field of type varchar(255) (optional).
+- description: A field of type text (optional).
+- type: A field of type varchar(255) (optional).
+- company_token: A field of type varchar(255) (optional).
+- country_code: A field of type varchar(255) (optional).
+- dial_code: A field of type varchar(255) (optional).
+- phone: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: company_address
+----------------------
+- company_address_id: A field of type int (required). Primary Key.
+- company_id: A field of type int (optional).
+- address_id: A field of type int (optional).
+- address_type_code: A field of type varchar(255) (optional).
+- address_1: A field of type varchar(255) (optional).
+- address_2: A field of type varchar(255) (optional).
+- city_id: A field of type varchar(255) (optional).
+- state_id: A field of type varchar(255) (optional).
+- zip: A field of type varchar(255) (optional).
+- country_id: A field of type varchar(255) (optional).
+- active_ind: A field of type varchar(255) (optional).
+- date_added: A field of type varchar(255) (optional).
+- date_updated: A field of type varchar(255) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: company_contacts
+-----------------------
+- company_contact_id: A field of type int (required). Primary Key.
+- contact_id: A field of type varchar(255) (required).
+- company_id: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: company_query
+--------------------
+- company_query_id: A field of type int (required). Primary Key.
+- company_id: A field of type int (required).
+- query_id: A field of type int (required).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: company_settings
+-----------------------
+- company_settings_id: A field of type int (required). Primary Key.
+- company_id: A field of type int (optional).
+- on_percentage: A field of type smallint (optional).
+- offer_percentage: A field of type smallint (required).
+- in_network_ind: A field of type tinyint(1) (required).
+- air_client_ind: A field of type tinyint(1) (required).
+- active_ind: A field of type tinyint(1) (required).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type varchar(100) (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type varchar(100) (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
+
+Table: company_user_id
+----------------------
+- company_user_id: A field of type int (required). Primary Key.
+- user_user_id: A field of type int (optional). Foreign Key → users.user_id.
+- company_id: A field of type int (optional). Foreign Key → company.company_id.
+- company_user: A field of type varchar(255) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: condition
+----------------
+- condition_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (required).
+- description: A field of type varchar(255) (required).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: contact
+--------------
+- contact_id: A field of type int (required). Primary Key.
+- organization_name: A field of type varchar(255) (optional).
+- contact_person: A field of type varchar(255) (optional).
+- email: A field of type varchar(255) (optional).
+- phone_no: A field of type varchar(255) (optional).
+- address: A field of type varchar(255) (optional).
+- provider_type: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: countries
+----------------
+- countries_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (optional).
+- iso3: A field of type varchar(255) (optional).
+- numeric_code: A field of type int (optional).
+- iso2: A field of type varchar(255) (optional).
+- phonecode: A field of type varchar(255) (optional).
+- capital: A field of type varchar(255) (optional).
+- currency: A field of type varchar(255) (optional).
+- currency_name: A field of type varchar(255) (optional).
+- currency_symbol: A field of type varchar(255) (optional).
+- region: A field of type varchar(255) (optional).
+- region_id: A field of type int (optional).
+- subregion: A field of type varchar(255) (optional).
+- subregion_id: A field of type int (optional).
+- nationality: A field of type varchar(255) (optional).
+- timezones: A field of type varchar(255) (optional).
+- latitude: A field of type float (optional).
+- longitude: A field of type float (optional).
+- flag: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: cpt
+----------
+- cpt_id: A field of type int (required). Primary Key.
+- claim_id: A field of type int (optional). Foreign Key → claim.claim_id.
+- cpt_code: A field of type varchar(255) (optional).
+- cpt_description: A field of type varchar(255) (optional).
+- incident_date: A field of type date (optional).
+- Place_of_service_code: A field of type varchar(255) (optional).
+- service_date: A field of type date (optional).
+- service_description: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: cpt_code
+---------------
+- cpt_code_id: A field of type int (required). Primary Key.
+- cpt_code: A field of type varchar(255) (optional).
+- cpt_description: A field of type varchar(255) (optional).
+- place_of_service_code: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type varchar(100) (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type varchar(100) (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
 
 Table: django_admin_log
 -----------------------
-- id: A field of type int (required).
+- id: A field of type int (required). Primary Key.
 - action_time: A field of type datetime(6) (required).
 - object_id: A field of type longtext (optional).
 - object_repr: A field of type varchar(200) (required).
 - action_flag: A field of type smallint unsigned (required).
 - change_message: A field of type longtext (required).
-- content_type_id: A field of type int (optional). Refers to django_content_type.id.
-- user_id: A field of type int (required). Refers to auth_user.id.
+- content_type_id: A field of type int (optional). Foreign Key → django_content_type.id.
+- user_id: A field of type int (required). Foreign Key → auth_user.id.
 
 Table: django_content_type
 --------------------------
-- id: A field of type int (required).
+- id: A field of type int (required). Primary Key.
 - app_label: A field of type varchar(100) (required).
 - model: A field of type varchar(100) (required).
 
 Table: django_migrations
 ------------------------
-- id: A field of type int (required).
+- id: A field of type int (required). Primary Key.
 - app: A field of type varchar(255) (required).
 - name: A field of type varchar(255) (required).
 - applied: A field of type datetime(6) (required).
 
 Table: django_session
 ---------------------
-- session_key: A field of type varchar(40) (required).
+- session_key: A field of type varchar(40) (required). Primary Key.
 - session_data: A field of type longtext (required).
 - expire_date: A field of type datetime(6) (required).
 
-Table: employeeprojects
------------------------
-- ID: A field of type int (required).
-- EmployeeID: A field of type int (optional). Refers to employees.EmployeeID.
-- ProjectID: A field of type int (optional). Refers to projects.ProjectID.
-- AssignedDate: A field of type date (optional).
-
-Table: employees
-----------------
-- EmployeeID: A field of type int (required).
-- FirstName: A field of type varchar(50) (optional).
-- LastName: A field of type varchar(50) (optional).
-- DepartmentID: A field of type int (optional). Refers to departments.DepartmentID.
-- JobTitleID: A field of type int (optional). Refers to jobtitles.JobTitleID.
-- HireDate: A field of type date (optional).
-
-Table: jobtitles
-----------------
-- JobTitleID: A field of type int (required).
-- TitleName: A field of type varchar(50) (required).
-
-Table: projects
+Table: document
 ---------------
-- ProjectID: A field of type int (required).
-- ProjectName: A field of type varchar(100) (optional).
-- DepartmentID: A field of type int (optional). Refers to departments.DepartmentID.
-- StartDate: A field of type date (optional).
-- EndDate: A field of type date (optional).
+- document_id: A field of type int (required). Primary Key.
+- document_category: A field of type varchar(255) (optional).
+- document_code: A field of type varchar(255) (optional).
+- document_name: A field of type varchar(255) (optional).
+- document_description: A field of type varchar(255) (optional).
+- document_type: A field of type varchar(255) (optional).
+- source_code: A field of type varchar(10) (optional).
+- redact_ind: A field of type tinyint(1) (optional).
+- auto_generate_ind: A field of type tinyint(1) (optional).
+- file_name_text: A field of type varchar(255) (optional).
+- sort_order: A field of type smallint (optional).
+- mandatory_ind: A field of type tinyint(1) (optional).
+- cms_package_ind: A field of type tinyint(1) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
 
+Table: document_list
+--------------------
+- document_list_id: A field of type int (required). Primary Key.
+- document_id: A field of type int (optional). Foreign Key → document.document_id.
+- file_name: A field of type varchar(255) (optional).
+- file_path: A field of type varchar(500) (optional).
+- file_type: A field of type varchar(45) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
+
+Table: document_template
+------------------------
+- document_template_id: A field of type int (required). Primary Key.
+- document_id: A field of type int (optional). Foreign Key → document.document_id.
+- template_name: A field of type varchar(255) (optional).
+- template_path: A field of type varchar(500) (optional).
+- template_file_type: A field of type varchar(45) (optional).
+- template_file: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- updated_date: A field of type datetime (optional).
+
+Table: error
+------------
+- error_id: A field of type int (required). Primary Key.
+- error_code: A field of type varchar(15) (required).
+- error_description: A field of type varchar(255) (optional).
+- severity_code: A field of type varchar(10) (optional).
+- active_ind: A field of type tinyint(1) (required).
+
+Table: error_log
+----------------
+- error_log_id: A field of type int (required). Primary Key.
+- error_id: A field of type int (required). Foreign Key → error.error_id.
+- error_code: A field of type varchar(15) (optional).
+- error_description: A field of type varchar(500) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+
+Table: file_upload_log
+----------------------
+- file_upload_log_id: A field of type int (required). Primary Key.
+- file_name: A field of type varchar(255) (required).
+- total_records: A field of type int (required).
+- records_inserted: A field of type int (optional).
+- records_affected: A field of type int (optional).
+- status: A field of type varchar(255) (required).
+- error_reason: A field of type varchar(255) (required).
+- upload_date: A field of type date (required).
+- upload_time: A field of type time (required).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: holidays
+---------------
+- holiday_date: A field of type date (required). Primary Key.
+- description: A field of type varchar(255) (optional).
+
+Table: icd_code
+---------------
+- icd_code_id: A field of type int (required). Primary Key.
+- icd_code: A field of type varchar(10) (required).
+- icd_code_name: A field of type varchar(255) (required).
+- icd_code_description: A field of type varchar(500) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type varchar(100) (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type varchar(100) (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
+
+Table: idr_entity
+-----------------
+- idr_entity_id: A field of type int (required). Primary Key.
+- idr_name: A field of type varchar(255) (required).
+- idr_address_id: A field of type int (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+
+Table: mapping_details
+----------------------
+- mapping_detail_id: A field of type int (required). Primary Key.
+- mapping_id: A field of type varchar(255) (required).
+- source_column_name: A field of type varchar(255) (required).
+- destination_column_name: A field of type varchar(255) (required).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: mappings
+---------------
+- mapping_id: A field of type int (required). Primary Key.
+- mapping_name: A field of type varchar(255) (required).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: message
+--------------
+- message_id: A field of type int (required). Primary Key.
+- message_code: A field of type varchar(45) (optional).
+- action_type_code: A field of type varchar(255) (optional).
+- text: A field of type varchar(255) (optional).
+- subject: A field of type varchar(255) (optional).
+- email_ind: A field of type tinyint(1) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: payor
+------------
+- payor_id: A field of type int (required). Primary Key.
+- payor_no: A field of type varchar(255) (optional).
+- payor: A field of type varchar(255) (optional).
+- contact_person: A field of type varchar(255) (optional).
+- InsurancePlanName: A field of type varchar(255) (optional).
+- PayorControlNumber: A field of type varchar(255) (optional).
+- FinancialClass: A field of type varchar(255) (optional).
+- INN: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: payor_address
+--------------------
+- payor_address_id: A field of type int (required). Primary Key.
+- payor_id: A field of type int (optional). Foreign Key → payor.payor_id.
+- address_id: A field of type int (required). Foreign Key → address.address_id.
+- email: A field of type varchar(255) (optional).
+- phone_no: A field of type varchar(255) (optional).
+- address_1: A field of type varchar(255) (optional).
+- address_2: A field of type varchar(255) (optional).
+- zip: A field of type varchar(255) (optional).
+- InsurancePlanAdress1: A field of type varchar(255) (optional).
+- InsurancePlanAdress2: A field of type varchar(255) (optional).
+- InsurancePlanCity: A field of type varchar(255) (optional).
+- InsurancePlanState: A field of type varchar(255) (optional).
+- InsurancePlanZip: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: place_of_service
+-----------------------
+- place_of_service_id: A field of type int (required). Primary Key.
+- place_of_service_code: A field of type varchar(10) (required).
+- place_of_service_name: A field of type varchar(255) (required).
+- place_of_service_description: A field of type varchar(500) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type varchar(255) (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
+
+Table: policy
+-------------
+- policy_id: A field of type int (required). Primary Key.
+- user_id: A field of type int (required).
+- policy_number: A field of type varchar(255) (required).
+- policy_type: A field of type varchar(255) (required).
+- start_date: A field of type datetime (required).
+- end_date: A field of type datetime (required).
+- premium: A field of type float (required).
+- coverage_amount: A field of type float (required).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: provider
+---------------
+- provider_id: A field of type int (required). Primary Key.
+- provider_type: A field of type varchar(255) (optional).
+- npi_nbr: A field of type varchar(255) (optional).
+- provider_name: A field of type varchar(255) (optional).
+- phone_no: A field of type varchar(255) (optional).
+- address: A field of type varchar(255) (optional).
+- ProvOrgTaxID: A field of type varchar(255) (optional).
+- ProvOrgNPI: A field of type varchar(255) (optional).
+- ProviderFirstName: A field of type varchar(255) (optional).
+- ProviderLastName: A field of type varchar(255) (optional).
+- ClientSystemVisitID: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: provider_address
+-----------------------
+- provider_address_id: A field of type int (required). Primary Key.
+- provider_id: A field of type int (required). Foreign Key → provider.provider_id.
+- address_id: A field of type int (required). Foreign Key → address.address_id.
+- first_name: A field of type varchar(255) (optional).
+- last_name: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type datetime (optional).
+- updated_by: A field of type datetime (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: provider_contact
+-----------------------
+- provider_contact_id: A field of type int (required). Primary Key.
+- prov_org_state: A field of type varchar(255) (optional).
+- location_city: A field of type varchar(255) (optional).
+- location_state: A field of type varchar(255) (optional).
+- location_zip: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: provider_facility
+------------------------
+- provider_facility_id: A field of type int (required). Primary Key.
+- provider_id: A field of type int (required). Foreign Key → provider.provider_id.
+- facility_type_code: A field of type varchar(45) (optional).
+- facility_name: A field of type varchar(255) (optional).
+- facility_address_id: A field of type int (optional). Foreign Key → address.address_id.
+- active_ind: A field of type tinyint(1) (required).
+- created_date: A field of type datetime (optional).
+- created_by: A field of type int (optional).
+- updated_date: A field of type datetime (optional).
+- updated_by: A field of type int (optional).
+
+Table: query
+------------
+- query_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(100) (optional).
+- description: A field of type varchar(255) (optional).
+- sql_text: A field of type text (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: reason
+-------------
+- reason_id: A field of type int (required). Primary Key.
+- reason: A field of type varchar(100) (optional).
+- reason_description: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+
+Table: regions
+--------------
+- region_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: roles
+------------
+- role_id: A field of type int (required). Primary Key.
+- roles_name: A field of type varchar(255) (optional).
+- roles_description: A field of type varchar(255) (optional).
+- roles_status: A field of type varchar(255) (optional).
+- roles_image_id: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
+
+Table: states
+-------------
+- states_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (optional).
+- country_id: A field of type int (optional).
+- country_code: A field of type varchar(255) (optional).
+- fips_code: A field of type varchar(255) (optional).
+- iso2: A field of type varchar(255) (optional).
+- type: A field of type varchar(255) (optional).
+- latitude: A field of type float (optional).
+- longitude: A field of type float (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: status
+-------------
+- status_id: A field of type int (required). Primary Key.
+- status_type_id: A field of type int (required).
+- status_code: A field of type varchar(255) (required).
+- status_name: A field of type varchar(255) (required).
+- status_description: A field of type varchar(255) (required).
+- color_code: A field of type varchar(10) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: status_reason
+--------------------
+- status_reason_id: A field of type int (required). Primary Key.
+- status_id: A field of type int (optional). Foreign Key → status.status_id.
+- reason_id: A field of type int (optional). Foreign Key → reason.reason_id.
+- active_ind: A field of type tinyint(1) (optional).
+
+Table: status_type
+------------------
+- status_type_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (required).
+- description: A field of type varchar(255) (required).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: subregions
+-----------------
+- subregions_id: A field of type int (required). Primary Key.
+- name: A field of type varchar(255) (required).
+- region_id: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- date_added: A field of type datetime (optional).
+- date_updated: A field of type datetime (optional).
+- created_by: A field of type varchar(255) (optional).
+- updated_by: A field of type varchar(255) (optional).
+
+Table: transition
+-----------------
+- transition_id: A field of type int (required). Primary Key.
+- workflow_id: A field of type int (optional). Foreign Key → workflow.workflow_id.
+- from_status_id: A field of type int (required).
+- to_status_id: A field of type int (optional).
+- transition_code: A field of type varchar(50) (optional).
+- manual_transition_ind: A field of type tinyint(1) (optional).
+- condition_id: A field of type int (optional).
+- min_days: A field of type int (optional).
+- max_days: A field of type int (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: type_category
+--------------------
+- type_category_code: A field of type varchar(10) (required). Primary Key.
+- type_category_name: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+
+Table: type_code
+----------------
+- type_code: A field of type varchar(10) (required). Primary Key.
+- type_category_code: A field of type varchar(10) (optional). Foreign Key → type_category.type_category_code.
+- type_code_name: A field of type varchar(255) (optional).
+- description: A field of type varchar(255) (optional).
+- sort_order: A field of type int (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- default_ind: A field of type tinyint(1) (optional).
+
+Table: user_additional_infos
+----------------------------
+- id: A field of type int (required). Primary Key.
+- userId: A field of type int (required). Foreign Key → users.user_id.
+- summaryInfo: A field of type varchar(255) (optional).
+- timezoneId: A field of type varchar(255) (optional).
+- userImage: A field of type varchar(255) (optional).
+- dateOfBirth: A field of type datetime (optional).
+- gender: A field of type varchar(255) (optional).
+- contactNumber: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (optional).
+- updatedAt: A field of type datetime (optional).
+
+Table: users
+------------
+- user_id: A field of type int (required). Primary Key.
+- userToken: A field of type varchar(255) (optional).
+- username: A field of type varchar(255) (optional).
+- password: A field of type varchar(255) (optional).
+- firstName: A field of type varchar(255) (optional).
+- lastName: A field of type varchar(255) (optional).
+- email: A field of type varchar(255) (optional).
+- provider: A field of type varchar(255) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: workflow
+---------------
+- workflow_id: A field of type int (required). Primary Key.
+- workflow_code: A field of type varchar(10) (optional).
+- name: A field of type varchar(100) (optional).
+- description: A field of type varchar(100) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- createdAt: A field of type datetime (required).
+- updatedAt: A field of type datetime (required).
+
+Table: workflow_step
+--------------------
+- workflow_step_id: A field of type int (required). Primary Key.
+- workflow_id: A field of type int (optional). Foreign Key → workflow.workflow_id.
+- name: A field of type varchar(255) (optional).
+- status_id: A field of type int (optional).
+- transition_id: A field of type int (optional).
+- sort_order: A field of type smallint (optional).
+- workflow_step_code: A field of type varchar(50) (optional).
+- claim_transition_id: A field of type int (optional).
+- confirm_ind: A field of type tinyint(1) (optional).
+- message_code: A field of type varchar(45) (optional).
+- start_ind: A field of type tinyint(1) (optional).
+- active_ind: A field of type tinyint(1) (optional).
+- updatedAt: A field of type datetime (optional).
+- createdAt: A field of type datetime (optional).
+
+
+Table Relationship Summary
+================================================================================
+- address is referenced by: payor_address.address_id, provider_address.address_id, provider_facility.facility_address_id
+- auth_group is referenced by: auth_group_permissions.group_id, auth_user_groups.group_id
+- auth_permission is referenced by: auth_group_permissions.permission_id, auth_user_user_permissions.permission_id
+- auth_user is referenced by: auth_user_groups.user_id, auth_user_user_permissions.user_id, django_admin_log.user_id
+- batch is referenced by: batch_claim.batch_id, batch_document.batch_id, batch_error_log.batch_id, batch_status.batch_id
+- batch_type is referenced by: batch.batch_type_id
+- claim is referenced by: batch_claim.claim_id, charge.claim_id, claim_document.claim_id, claim_error_log.claim_id, claim_log.claim_id, claim_status.claim_id, cpt.claim_id
+- company is referenced by: company_user_id.company_id
+- django_content_type is referenced by: auth_permission.content_type_id, django_admin_log.content_type_id
+- document is referenced by: batch_document.document_id, claim_document.document_id, document_list.document_id, document_template.document_id
+- document_list is referenced by: batch_document.document_list_id, claim_document.document_list_id
+- error is referenced by: error_log.error_id
+- error_log is referenced by: claim_error_log.error_log_id
+- file_upload_log is referenced by: claim_log.file_upload_log_id
+- idr_entity is referenced by: batch_detail.idr_entity_id
+- payor is referenced by: batch.payor_id, payor_address.payor_id
+- provider is referenced by: batch.provider_id, provider_address.provider_id, provider_facility.provider_id
+- provider_address is referenced by: batch_detail.provider_address_id
+- provider_facility is referenced by: batch_detail.provider_facility_id
+- reason is referenced by: status_reason.reason_id
+- status is referenced by: batch_status.status_id, claim_status.status_id, status_reason.status_id
+- type_category is referenced by: type_code.type_category_code
+- users is referenced by: batch_detail.batch_owner_id, company_user_id.user_user_id, user_additional_infos.userId
+- workflow is referenced by: batch_status.workflow_id, claim_status.workflow_id, transition.workflow_id, workflow_step.workflow_id
+- workflow_step is referenced by: batch_status.workflow_step_id, claim_status.workflow_step_id
