@@ -1,4 +1,3 @@
-# views.py
 import os
 import json
 import logging
@@ -16,6 +15,7 @@ from .sql_agent import (
     parse_schema_to_dict,
     validate_sql_against_schema,
     load_or_generate_metadata,
+    clean_sql_output,
 )
 
 # Setup logging
@@ -37,7 +37,7 @@ encoded_password = quote_plus(DB_PASSWORD)
 db_uri = f"mysql+pymysql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 db = SQLDatabase.from_uri(db_uri)
 
-# Preload schema and explanation chain
+# Load schema & explanation chain
 rich_schema = load_or_generate_metadata()
 schema_dict = parse_schema_to_dict(rich_schema)
 explanation_chain = get_explanation_llm()
@@ -71,53 +71,85 @@ def chat_view(request):
         if not user_question:
             return JsonResponse({"error": "Empty question"}, status=400)
 
-        logger.info("User question received")
+        logger.info(f"Processing question: {user_question}")
+
+        # Step 1: Get SQL
         response = dynamic_get_sql_response(user_question, chat_history)
-        sql_query = (
-            response["text"].strip()
-            if isinstance(response, dict)
-            else str(response).strip()
+        sql_query = response.get("text", "").strip()
+
+        # Clean up any markdown-style SQL tags
+        sql_query = clean_sql_output(sql_query)
+        logger.debug(f"Generated SQL: {sql_query}")
+
+        # Step 2: Allow bypass for known meta/system queries
+        is_system_query = any(
+            kw in sql_query.lower()
+            for kw in [
+                "information_schema",
+                "show tables",
+                "select database()",
+                "mysql.",
+            ]
         )
 
-        logger.debug("Generated SQL query")
+        # Step 3: Validate SQL
         validation_errors = validate_sql_against_schema(sql_query, schema_dict)
-
-        if validation_errors:
+        if validation_errors and not is_system_query:
             return JsonResponse(
                 {
                     "question": user_question,
                     "sql": sql_query,
                     "raw_results": [],
-                    "answer": "SQL validation failed. Here is the generated SQL.",
+                    "answer": "SQL validation failed. Here's the generated SQL.",
                     "details": validation_errors,
                 }
             )
 
+        # Step 4: Run SQL
         raw_results = run_sql_query(db, sql_query)
         formatted_results = format_raw_results(raw_results)
 
+        # Step 5: Run Explanation
         try:
-            explanation_text = explanation_chain.invoke(
+            explanation = explanation_chain.invoke(
                 {
                     "question": user_question,
                     "raw_results": json.dumps(formatted_results, indent=2),
                 }
             )
         except Exception as e:
-            logger.warning(f"Explanation LLM failed: {e}")
-            explanation_text = "Explanation not available."
+            logger.warning(f"Explanation generation failed: {e}")
+            explanation = "Explanation not available."
 
+        # Step 6: Extract answer from explanation
+        if isinstance(explanation, dict):
+            answer = explanation.get("text", "").strip()
+        else:
+            answer = str(explanation).strip()
+
+        # Step 7: Fallback if LLM explanation isn't usable
+        if not answer or answer.lower() == "explanation not available.":
+            if isinstance(formatted_results, list):
+                try:
+                    count = (
+                        formatted_results[0]["value"]
+                        if isinstance(formatted_results[0], dict)
+                        else formatted_results[0][0]
+                    )
+                    answer = f"There are {count} tables in the `{DB_NAME}` database."
+                except Exception:
+                    answer = "Explanation not available."
+
+        # Final Response
         return JsonResponse(
             {
                 "question": user_question,
                 "sql": sql_query,
                 "raw_results": formatted_results,
-                "answer": explanation_text.get("text", "Explanation not available.")
-                if isinstance(explanation_text, dict)
-                else explanation_text or "Explanation not available.",
+                "answer": answer,
             }
         )
 
     except Exception:
-        logger.exception("Unexpected error in chat_view:")
+        logger.exception("Unhandled exception in chat_view")
         return JsonResponse({"error": "Internal Server Error"}, status=500)

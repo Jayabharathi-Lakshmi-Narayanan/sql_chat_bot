@@ -1,3 +1,5 @@
+# --- sql_agent.py ---
+
 import re
 from collections import defaultdict
 import sqlparse
@@ -57,16 +59,43 @@ SQL Query:
     )
 
 
+def clean_sql_output(response_text: str) -> str:
+    return re.sub(
+        r"^```(?:sql)?|```$", "", response_text.strip(), flags=re.IGNORECASE
+    ).strip()
+
+
 def dynamic_get_sql_response(user_question: str, chat_history: list):
+    fallback = handle_fallback_question(user_question)
+    if fallback:
+        return {"text": fallback["answer"]}
+
     chat_history_str = trim_chat_history(chat_history)
     schema_chunk = retrieve_relevant_schema(user_question)
     agent = get_sql_agent(schema_chunk)
-    return agent.invoke(
+    response = agent.invoke(
         {
             "question": user_question,
             "chat_history": chat_history_str,
         }
     )
+
+    response_text = response if isinstance(response, str) else str(response)
+    cleaned_sql = clean_sql_output(response_text)
+
+    return {"text": cleaned_sql}
+
+
+def handle_fallback_question(question: str) -> dict | None:
+    q = question.lower().strip()
+
+    if "name of the database" in q or "which database" in q:
+        from decouple import config
+
+        db_name = config("DB_NAME", default="(unknown)")
+        return {"answer": f"The database currently connected is `{db_name}`."}
+
+    return None
 
 
 def get_explanation_llm():
@@ -131,7 +160,6 @@ def parse_schema_to_dict(schema: str) -> dict:
 def extract_tables_and_aliases(parsed):
     tables = {}
     from_seen = False
-
     for token in parsed.tokens:
         if token.is_group:
             inner_tables = extract_tables_and_aliases(token)
@@ -155,7 +183,6 @@ def extract_tables_and_aliases(parsed):
 
 def extract_column_references(parsed):
     columns = set()
-
     for token in parsed.tokens:
         if token.is_group:
             columns |= extract_column_references(token)
@@ -197,31 +224,6 @@ def validate_sql_against_schema(sql_query: str, schema_dict: dict) -> list:
                     errors.append(f"Unknown or ambiguous column: {col}")
 
     return errors
-
-
-def fix_sql_query(sql_query: str, schema_dict: dict) -> str:
-    parsed_statements = sqlparse.parse(sql_query)
-    if not parsed_statements:
-        return sql_query
-
-    parsed = parsed_statements[0]
-    column_refs = extract_column_references(parsed)
-
-    # Try to infer the correct table
-    for col in column_refs:
-        found_tables = [table for table, cols in schema_dict.items() if col in cols]
-        if len(found_tables) == 1:
-            correct_table = found_tables[0]
-            # Replace old table name in query
-            fixed_query = re.sub(
-                r"(FROM|JOIN)\s+\w+",
-                f"\\1 {correct_table}",
-                sql_query,
-                flags=re.IGNORECASE,
-            )
-            return fixed_query
-
-    return sql_query
 
 
 def load_or_generate_metadata(path="config/rich_metadata.txt"):
