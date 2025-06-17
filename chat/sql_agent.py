@@ -82,19 +82,21 @@ def dynamic_get_sql_response(user_question: str, chat_history: list):
 
     response_text = response if isinstance(response, str) else str(response)
     cleaned_sql = clean_sql_output(response_text)
-
     return {"text": cleaned_sql}
 
 
 def handle_fallback_question(question: str) -> dict | None:
     q = question.lower().strip()
-
     if "name of the database" in q or "which database" in q:
-        from decouple import config
+        try:
+            from decouple import config
 
-        db_name = config("DB_NAME", default="(unknown)")
-        return {"answer": f"The database currently connected is `{db_name}`."}
-
+            db_name = config("DB_NAME", default="(unknown)")
+            return {"answer": f"The database currently connected is `{db_name}`."}
+        except ImportError:
+            return {
+                "answer": "Could not retrieve database name. Required module missing."
+            }
     return None
 
 
@@ -135,6 +137,7 @@ def run_sql_query(db: SQLDatabase, sql_query: str):
 def trim_chat_history(chat_history: list, max_tokens: int = 1024) -> str:
     combined = ""
     for turn in reversed(chat_history):
+        piece = ""
         if isinstance(turn, dict):
             piece = f"User: {turn.get('user', '')}\nBot: {turn.get('bot', '')}\n"
         else:
@@ -162,8 +165,7 @@ def extract_tables_and_aliases(parsed):
     from_seen = False
     for token in parsed.tokens:
         if token.is_group:
-            inner_tables = extract_tables_and_aliases(token)
-            tables.update(inner_tables)
+            tables.update(extract_tables_and_aliases(token))
         if token.ttype is Keyword and token.value.upper() in ("FROM", "JOIN"):
             from_seen = True
             continue
