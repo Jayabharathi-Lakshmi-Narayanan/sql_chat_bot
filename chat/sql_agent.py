@@ -1,5 +1,3 @@
-# --- sql_agent.py ---
-
 import re
 from collections import defaultdict
 import sqlparse
@@ -29,18 +27,27 @@ def create_llm(temperature=0.0, max_tokens=2048):
 
 def get_sql_agent(schema_text: str):
     prompt_template = """
-You are a helpful data analyst. You are given the database schema below. Based on the schema and the user's question, generate a valid SQL query to answer the question.
+You are a highly reliable MySQL SQL generation assistant.
+
+Given the database schema and a user question, generate a single, valid MySQL SQL query that answers the question.
 
 <SCHEMA>
 {schema}
 </SCHEMA>
 
-Conversation History:
+Chat History:
 {chat_history}
 
-Now write only the SQL query. Do not add any other text.
+User Question:
+{question}
 
-Question: {question}
+Instructions:
+- Only output the SQL query, nothing else.
+- NEVER use placeholders like DATABASE_NAME.
+- Do NOT write any comments, explanations, or markdown.
+- If the user asks for the current database name, output: SELECT DATABASE();
+- Ensure the syntax is valid MySQL.
+
 SQL Query:
 """.strip()
 
@@ -60,19 +67,18 @@ SQL Query:
 
 
 def clean_sql_output(response_text: str) -> str:
-    return re.sub(
-        r"^```(?:sql)?|```$", "", response_text.strip(), flags=re.IGNORECASE
-    ).strip()
+    cleaned = re.sub(
+        r"^```(?:\w+)?|```$", "", response_text.strip(), flags=re.IGNORECASE
+    )
+    cleaned = re.sub(r"^(vbnet|sql|python)\n", "", cleaned.strip(), flags=re.IGNORECASE)
+    return cleaned.strip()
 
 
 def dynamic_get_sql_response(user_question: str, chat_history: list):
-    fallback = handle_fallback_question(user_question)
-    if fallback:
-        return {"text": fallback["answer"]}
-
     chat_history_str = trim_chat_history(chat_history)
     schema_chunk = retrieve_relevant_schema(user_question)
     agent = get_sql_agent(schema_chunk)
+
     response = agent.invoke(
         {
             "question": user_question,
@@ -82,27 +88,25 @@ def dynamic_get_sql_response(user_question: str, chat_history: list):
 
     response_text = response if isinstance(response, str) else str(response)
     cleaned_sql = clean_sql_output(response_text)
+
+    # Fallback logic for known patterns
+    if "database" in user_question.lower() and "select" not in cleaned_sql.lower():
+        cleaned_sql = "SELECT DATABASE();"
+
     return {"text": cleaned_sql}
-
-
-def handle_fallback_question(question: str) -> dict | None:
-    q = question.lower().strip()
-    if "name of the database" in q or "which database" in q:
-        try:
-            from decouple import config
-
-            db_name = config("DB_NAME", default="(unknown)")
-            return {"answer": f"The database currently connected is `{db_name}`."}
-        except ImportError:
-            return {
-                "answer": "Could not retrieve database name. Required module missing."
-            }
-    return None
 
 
 def get_explanation_llm():
     prompt_template = """
-You are a helpful assistant. Given the user's question and the raw SQL result, provide a clear explanation in simple language.
+You are a precise and concise assistant.
+
+Given the user's question and the raw SQL result, do the following:
+
+- If the result is a single value (e.g., database name), return that value clearly and directly.
+- If the result is tabular data, summarize what it represents.
+- Do NOT make assumptions or introduce new information.
+- ONLY explain based on the raw SQL result.
+- Never guess what the user might have meant beyond the question.
 
 Question:
 {question}
@@ -110,7 +114,7 @@ Question:
 SQL Results:
 {raw_results}
 
-Explanation:
+Answer:
 """.strip()
 
     prompt = PromptTemplate.from_template(prompt_template)
@@ -123,7 +127,7 @@ Explanation:
             }
         )
         | prompt
-        | create_llm(temperature=0.7, max_tokens=1024)
+        | create_llm(temperature=0.5, max_tokens=512)
     )
 
 

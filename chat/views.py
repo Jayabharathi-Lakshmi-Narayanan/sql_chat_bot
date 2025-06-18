@@ -30,14 +30,14 @@ DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "Yakkay@123")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME", "employeedb")
+DB_NAME = os.getenv("DB_NAME", "dares")  # Updated based on your .env
 
 # Build DB URI
 encoded_password = quote_plus(DB_PASSWORD)
 db_uri = f"mysql+pymysql://{DB_USER}:{encoded_password}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 db = SQLDatabase.from_uri(db_uri)
 
-# Load schema & explanation chain
+# Load schema & explanation model
 rich_schema = load_or_generate_metadata()
 schema_dict = parse_schema_to_dict(rich_schema)
 explanation_chain = get_explanation_llm()
@@ -77,39 +77,28 @@ def chat_view(request):
         response = dynamic_get_sql_response(user_question, chat_history)
         sql_query = response.get("text", "").strip()
 
-        # Clean up any markdown-style SQL tags
         sql_query = clean_sql_output(sql_query)
         logger.debug(f"Generated SQL: {sql_query}")
 
-        # Step 2: Allow bypass for known meta/system queries
-        is_system_query = any(
-            kw in sql_query.lower()
-            for kw in [
-                "information_schema",
-                "show tables",
-                "select database()",
-                "mysql.",
-            ]
-        )
-
-        # Step 3: Validate SQL
+        # Step 2: Validate SQL
         validation_errors = validate_sql_against_schema(sql_query, schema_dict)
-        if validation_errors and not is_system_query:
+
+        # Step 3: Run SQL if valid or clearly a system query
+        if not validation_errors or sql_query.lower().startswith("select database()"):
+            raw_results = run_sql_query(db, sql_query)
+            formatted_results = format_raw_results(raw_results)
+        else:
             return JsonResponse(
                 {
                     "question": user_question,
                     "sql": sql_query,
                     "raw_results": [],
-                    "answer": "SQL validation failed. Here's the generated SQL.",
+                    "answer": "SQL validation failed.",
                     "details": validation_errors,
                 }
             )
 
-        # Step 4: Run SQL
-        raw_results = run_sql_query(db, sql_query)
-        formatted_results = format_raw_results(raw_results)
-
-        # Step 5: Run Explanation
+        # Step 4: Explain result
         try:
             explanation = explanation_chain.invoke(
                 {
@@ -121,26 +110,14 @@ def chat_view(request):
             logger.warning(f"Explanation generation failed: {e}")
             explanation = "Explanation not available."
 
-        # Step 6: Extract answer from explanation
-        if isinstance(explanation, dict):
-            answer = explanation.get("text", "").strip()
-        else:
-            answer = str(explanation).strip()
+        answer = (
+            explanation.get("text", "").strip()
+            if isinstance(explanation, dict)
+            else str(explanation).strip()
+        )
+        if not answer:
+            answer = "Explanation not available."
 
-        # Step 7: Fallback if LLM explanation isn't usable
-        if not answer or answer.lower() == "explanation not available.":
-            if isinstance(formatted_results, list):
-                try:
-                    count = (
-                        formatted_results[0]["value"]
-                        if isinstance(formatted_results[0], dict)
-                        else formatted_results[0][0]
-                    )
-                    answer = f"There are {count} tables in the `{DB_NAME}` database."
-                except Exception:
-                    answer = "Explanation not available."
-
-        # Final Response
         return JsonResponse(
             {
                 "question": user_question,
