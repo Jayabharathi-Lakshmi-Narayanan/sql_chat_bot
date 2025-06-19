@@ -11,6 +11,7 @@ from langchain_community.llms import LlamaCpp
 
 from rag_utils.retriever import retrieve_relevant_schema
 
+
 MODEL_PATH = r"D:\jb\Yakkaybot\yakkay_backend\mistral-7b-instruct-v0.2.Q4_K_M.gguf"
 
 
@@ -67,11 +68,15 @@ SQL Query:
 
 
 def clean_sql_output(response_text: str) -> str:
+    # Remove Markdown or language tags
     cleaned = re.sub(
         r"^```(?:\w+)?|```$", "", response_text.strip(), flags=re.IGNORECASE
     )
     cleaned = re.sub(r"^(vbnet|sql|python)\n", "", cleaned.strip(), flags=re.IGNORECASE)
-    return cleaned.strip()
+
+    # Extract only the first SQL statement
+    statements = sqlparse.split(cleaned)
+    return statements[0].strip() if statements else cleaned.strip()
 
 
 def dynamic_get_sql_response(user_question: str, chat_history: list):
@@ -88,11 +93,6 @@ def dynamic_get_sql_response(user_question: str, chat_history: list):
 
     response_text = response if isinstance(response, str) else str(response)
     cleaned_sql = clean_sql_output(response_text)
-
-    # Fallback logic for known patterns
-    if "database" in user_question.lower() and "select" not in cleaned_sql.lower():
-        cleaned_sql = "SELECT DATABASE();"
-
     return {"text": cleaned_sql}
 
 
